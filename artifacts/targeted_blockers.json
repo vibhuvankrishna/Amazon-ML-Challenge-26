@@ -1,0 +1,76 @@
+{
+  "current": {
+    "pair_recall": 0.6126,
+    "avg": 5.67,
+    "median": 5.0,
+    "p95": 12,
+    "p99": 12,
+    "max": 12,
+    "zero_pct": 0.0471,
+    "oracle_f05": 0.7895,
+    "retrieved": 3563,
+    "true_links": 5816
+  },
+  "transliteration": {
+    "pair_recall": 0.2839,
+    "avg": 1.08,
+    "median": 1.0,
+    "p95": 3,
+    "p99": 4,
+    "max": 10,
+    "zero_pct": 0.3949,
+    "oracle_f05": 0.5028,
+    "retrieved": 1651,
+    "true_links": 5816
+  },
+  "short_name_house": {
+    "pair_recall": 0.507,
+    "avg": 9.17,
+    "median": 4.0,
+    "p95": 35,
+    "p99": 48,
+    "max": 75,
+    "zero_pct": 0.2083,
+    "oracle_f05": 0.6668,
+    "retrieved": 2949,
+    "true_links": 5816
+  },
+  "combined": {
+    "pair_recall": 0.7493,
+    "avg": 13.54,
+    "median": 10.0,
+    "p95": 39,
+    "p99": 54,
+    "max": 75,
+    "zero_pct": 0.0133,
+    "oracle_f05": 0.8769,
+    "retrieved": 4358,
+    "true_links": 5816
+  },
+  "targets": {
+    "transliteration": {
+      "n": 442,
+      "recovered_by_transliteration": 4,
+      "recovered_by_short": 43,
+      "recovered_by_combined": 46,
+      "still_missing_after_combined": 396
+    },
+    "abbreviation_or_shortened_name": {
+      "n": 568,
+      "recovered_by_transliteration": 0,
+      "recovered_by_short": 325,
+      "recovered_by_combined": 325,
+      "still_missing_after_combined": 243
+    },
+    "name_typo": {
+      "n": 451,
+      "recovered_by_transliteration": 0,
+      "recovered_by_short": 189,
+      "recovered_by_combined": 189,
+      "still_missing_after_combined": 262
+    }
+  },
+  "dead_translit_keys": 0,
+  "dead_short_keys": 660,
+  "max_df": 40
+}

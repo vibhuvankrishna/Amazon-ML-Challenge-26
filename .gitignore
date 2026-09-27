@@ -1,0 +1,37 @@
+# Challenge data and generated submissions are too large for GitHub.
+dataset/
+
+output/
+output_v2/
+output_v3/
+output_v4/
+output_v5/
+
+# Pair files, including any future output directory.
+matching_results.tsv
+candidate_pairs.tsv
+
+# Block indexes and entity databases.
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Local caches and environments.
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/
+*.pkl
+
+logs/
+
+# Secrets.
+.env
+*.pem
+credentials.json
+secrets.json
+
+# Local screenshots.
+Screenshot*.png

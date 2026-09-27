@@ -1,0 +1,248 @@
+{
+  "holdout": "stride 400, last 30%",
+  "max_df": 40,
+  "excluded": [
+    "name_trigram",
+    "address_trigram",
+    "single_rare_token"
+  ],
+  "rank_weights": {
+    "shared_name_tokens": 4,
+    "near_name_token": 3,
+    "rare_shared_token_len_ge_6": 2,
+    "exact_normalized_name": 6,
+    "house_match": 5,
+    "pin_match": 4,
+    "locality_match": 3,
+    "shared_address_tokens": 2,
+    "each_blocker": 3,
+    "country_match": 1
+  },
+  "current_top12": {
+    "pair_recall": 0.6126,
+    "retrieved": 3563,
+    "true_links": 5816,
+    "avg": 5.67,
+    "median": 5.0,
+    "p95": 12,
+    "p99": 12,
+    "max": 12,
+    "zero_pct": 0.0471,
+    "oracle_f05": 0.7895
+  },
+  "union_untrimmed": {
+    "pair_recall": 0.8425,
+    "retrieved": 4900,
+    "true_links": 5816,
+    "avg": 24.8,
+    "median": 17.0,
+    "p95": 68,
+    "p99": 90,
+    "max": 135,
+    "zero_pct": 0.0048,
+    "oracle_f05": 0.9281
+  },
+  "multi_blocker_candidates": 11075,
+  "true_links_found_by_2plus_blockers": 4142,
+  "bucket_sizes": {
+    "abbreviation_or_shortened_name": 1009,
+    "name_typo": 710,
+    "transliteration": 794
+  },
+  "by_k": [
+    {
+      "pair_recall": 0.8098,
+      "retrieved": 4710,
+      "true_links": 5816,
+      "avg": 7.24,
+      "median": 8.0,
+      "p95": 8,
+      "p99": 8,
+      "max": 8,
+      "zero_pct": 0.0048,
+      "oracle_f05": 0.9177,
+      "k": 8,
+      "vs_baseline_links": 1147,
+      "vs_baseline_recall": 0.1972,
+      "buckets": {
+        "abbreviation_or_shortened_name": {
+          "n": 1009,
+          "retrieved": 839,
+          "recall": 0.8315
+        },
+        "name_typo": {
+          "n": 710,
+          "retrieved": 498,
+          "recall": 0.7014
+        },
+        "transliteration": {
+          "n": 794,
+          "retrieved": 495,
+          "recall": 0.6234
+        }
+      }
+    },
+    {
+      "pair_recall": 0.8241,
+      "retrieved": 4793,
+      "true_links": 5816,
+      "avg": 10.0,
+      "median": 12.0,
+      "p95": 12,
+      "p99": 12,
+      "max": 12,
+      "zero_pct": 0.0048,
+      "oracle_f05": 0.9226,
+      "k": 12,
+      "vs_baseline_links": 1230,
+      "vs_baseline_recall": 0.2115,
+      "buckets": {
+        "abbreviation_or_shortened_name": {
+          "n": 1009,
+          "retrieved": 853,
+          "recall": 0.8454
+        },
+        "name_typo": {
+          "n": 710,
+          "retrieved": 513,
+          "recall": 0.7225
+        },
+        "transliteration": {
+          "n": 794,
+          "retrieved": 508,
+          "recall": 0.6398
+        }
+      }
+    },
+    {
+      "pair_recall": 0.8308,
+      "retrieved": 4832,
+      "true_links": 5816,
+      "avg": 12.33,
+      "median": 16.0,
+      "p95": 16,
+      "p99": 16,
+      "max": 16,
+      "zero_pct": 0.0048,
+      "oracle_f05": 0.9245,
+      "k": 16,
+      "vs_baseline_links": 1269,
+      "vs_baseline_recall": 0.2182,
+      "buckets": {
+        "abbreviation_or_shortened_name": {
+          "n": 1009,
+          "retrieved": 863,
+          "recall": 0.8553
+        },
+        "name_typo": {
+          "n": 710,
+          "retrieved": 522,
+          "recall": 0.7352
+        },
+        "transliteration": {
+          "n": 794,
+          "retrieved": 510,
+          "recall": 0.6423
+        }
+      }
+    },
+    {
+      "pair_recall": 0.8343,
+      "retrieved": 4852,
+      "true_links": 5816,
+      "avg": 14.28,
+      "median": 17.0,
+      "p95": 20,
+      "p99": 20,
+      "max": 20,
+      "zero_pct": 0.0048,
+      "oracle_f05": 0.9253,
+      "k": 20,
+      "vs_baseline_links": 1289,
+      "vs_baseline_recall": 0.2217,
+      "buckets": {
+        "abbreviation_or_shortened_name": {
+          "n": 1009,
+          "retrieved": 865,
+          "recall": 0.8573
+        },
+        "name_typo": {
+          "n": 710,
+          "retrieved": 524,
+          "recall": 0.738
+        },
+        "transliteration": {
+          "n": 794,
+          "retrieved": 517,
+          "recall": 0.6511
+        }
+      }
+    },
+    {
+      "pair_recall": 0.8349,
+      "retrieved": 4856,
+      "true_links": 5816,
+      "avg": 15.98,
+      "median": 17.0,
+      "p95": 24,
+      "p99": 24,
+      "max": 24,
+      "zero_pct": 0.0048,
+      "oracle_f05": 0.9254,
+      "k": 24,
+      "vs_baseline_links": 1293,
+      "vs_baseline_recall": 0.2223,
+      "buckets": {
+        "abbreviation_or_shortened_name": {
+          "n": 1009,
+          "retrieved": 865,
+          "recall": 0.8573
+        },
+        "name_typo": {
+          "n": 710,
+          "retrieved": 525,
+          "recall": 0.7394
+        },
+        "transliteration": {
+          "n": 794,
+          "retrieved": 518,
+          "recall": 0.6524
+        }
+      }
+    }
+  ],
+  "chosen_k": 24,
+  "classifier_current_top12": {
+    "k": 12,
+    "threshold": 0.64,
+    "macro_f05": 0.6933,
+    "micro_precision": 0.8979,
+    "micro_recall": 0.5385,
+    "micro_f05": 0.7922,
+    "macro_precision_on_matched": 0.7977,
+    "macro_recall_on_matched": 0.5412,
+    "false_matches": 356,
+    "missed_matches": 2684,
+    "true_positives": 3132,
+    "singleton_accuracy": 0.6477,
+    "singletons": 88,
+    "singletons_correct": 57
+  },
+  "classifier_chosen": {
+    "k": 24,
+    "threshold": 0.64,
+    "macro_f05": 0.7782,
+    "micro_precision": 0.8671,
+    "micro_recall": 0.7025,
+    "micro_f05": 0.8283,
+    "macro_precision_on_matched": 0.848,
+    "macro_recall_on_matched": 0.7014,
+    "false_matches": 626,
+    "missed_matches": 1730,
+    "true_positives": 4086,
+    "singleton_accuracy": 0.5568,
+    "singletons": 88,
+    "singletons_correct": 49
+  },
+  "logged_baseline_val_f05": 0.7022
+}

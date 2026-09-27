@@ -1,0 +1,46 @@
+{
+  "baseline_val": {
+    "n": 1656,
+    "macro_f05": 0.6621760812202664,
+    "macro_precision": 0.7351995629169534,
+    "macro_recall": 0.5451518288474805,
+    "micro_precision": 0.899511915015791,
+    "micro_recall": 0.5386863823933975,
+    "micro_f05": 0.7932448855580312,
+    "tp": 3133,
+    "fp": 350,
+    "fn": 2683,
+    "singleton_n": 88,
+    "singleton_macro_f05": 0.6590909090909091,
+    "matched_macro_f05": 0.6623492286356892,
+    "oracle_within_candidates_f05": 0.7712963484562116,
+    "avg_cands": 6.583937198067633,
+    "median_cands": 6.0,
+    "p95_cands": 12,
+    "p99_cands": 12,
+    "max_cands": 12,
+    "zero_cand_pct": 0.11775362318840579,
+    "threshold": 0.72
+  },
+  "miss": {
+    "true_links": 5816,
+    "missed": 2115,
+    "reasons": {
+      "transliteration": 160,
+      "name_typo": 153,
+      "shared_key_but_not_in_top12": 1544,
+      "trade_or_different_name_same_address": 97,
+      "address_typo_or_reorder": 103,
+      "other": 29,
+      "word_order_or_suffix": 8,
+      "missing_address": 21
+    },
+    "alt_overlap_on_misses": {
+      "addr_tri": 14913,
+      "name_tri": 8704,
+      "exact_name": 678,
+      "sorted_tokens": 848,
+      "loc_name": 515
+    }
+  }
+}

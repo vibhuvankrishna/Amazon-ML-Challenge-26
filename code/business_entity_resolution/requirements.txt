@@ -1,0 +1,9 @@
+# Keep lean — CPU-only, no GPU / deep-learning deps (saves AWS credits).
+# No LightGBM: it needs libomp on macOS. sklearn HistGradientBoosting is enough.
+# Install locally:  pip install -r requirements.txt
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+rapidfuzz>=3.0.0
+tqdm>=4.66.0
+joblib>=1.3.0

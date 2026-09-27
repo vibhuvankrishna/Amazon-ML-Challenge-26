@@ -1,0 +1,23 @@
+{
+  "threshold": 0.92,
+  "val_macro_f05": 0.8928585217737192,
+  "sample": 25000,
+  "max_candidates": 120,
+  "blocking_train": {
+    "pair_recall": 0.8035195788445361,
+    "entity_full_recall": 0.5481215386918126,
+    "n_true_pairs": 73702.0,
+    "n_found": 59221.0,
+    "avg_candidates": 101.91421176470588
+  },
+  "blocking_val": {
+    "pair_recall": 0.8003847633705271,
+    "entity_full_recall": 0.5404494382022472,
+    "n_true_pairs": 12995.0,
+    "n_found": 10401.0,
+    "avg_candidates": 101.35493333333334
+  },
+  "n_train_pairs": 352676,
+  "n_val_s1": 3750,
+  "model": "HistGradientBoostingClassifier"
+}

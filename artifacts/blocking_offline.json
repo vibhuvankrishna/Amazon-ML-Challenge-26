@@ -1,0 +1,629 @@
+{
+  "current_v2": {
+    "pair_recall": 0.6124,
+    "avg": 5.69,
+    "median": 5.0,
+    "p95": 12,
+    "p99": 12,
+    "max": 12,
+    "zero_pct": 0.0459,
+    "oracle_f05": 0.7883,
+    "retrieved": 3562,
+    "true_links": 5816
+  },
+  "strategies": {
+    "name_trigram": {
+      "pair_recall": 0.0002,
+      "avg": 0.02,
+      "median": 0.0,
+      "p95": 0,
+      "p99": 0,
+      "max": 16,
+      "zero_pct": 0.9988,
+      "oracle_f05": 0.0536,
+      "retrieved": 1,
+      "true_links": 5816
+    },
+    "sorted_all_tokens": {
+      "pair_recall": 0.3585,
+      "avg": 3.32,
+      "median": 1.0,
+      "p95": 15,
+      "p99": 28,
+      "max": 39,
+      "zero_pct": 0.3804,
+      "oracle_f05": 0.5345,
+      "retrieved": 2085,
+      "true_links": 5816
+    },
+    "name_plus_house": {
+      "pair_recall": 0.2847,
+      "avg": 1.2,
+      "median": 1.0,
+      "p95": 4,
+      "p99": 6,
+      "max": 21,
+      "zero_pct": 0.3804,
+      "oracle_f05": 0.5037,
+      "retrieved": 1656,
+      "true_links": 5816
+    },
+    "house_plus_locality": {
+      "pair_recall": 0.4001,
+      "avg": 4.25,
+      "median": 2.0,
+      "p95": 20,
+      "p99": 35,
+      "max": 40,
+      "zero_pct": 0.3376,
+      "oracle_f05": 0.5571,
+      "retrieved": 2327,
+      "true_links": 5816
+    },
+    "address_trigram": {
+      "pair_recall": 0.0021,
+      "avg": 0.13,
+      "median": 0.0,
+      "p95": 0,
+      "p99": 0,
+      "max": 71,
+      "zero_pct": 0.9964,
+      "oracle_f05": 0.0561,
+      "retrieved": 12,
+      "true_links": 5816
+    },
+    "single_rare_token": {
+      "pair_recall": 0.0686,
+      "avg": 1.45,
+      "median": 0.0,
+      "p95": 12,
+      "p99": 32,
+      "max": 40,
+      "zero_pct": 0.9227,
+      "oracle_f05": 0.1218,
+      "retrieved": 399,
+      "true_links": 5816
+    }
+  },
+  "combined": {
+    "union_all": {
+      "pair_recall": 0.6575,
+      "avg": 7.53,
+      "median": 4.0,
+      "p95": 28,
+      "p99": 38,
+      "max": 71,
+      "zero_pct": 0.0779,
+      "oracle_f05": 0.812,
+      "retrieved": 3824,
+      "true_links": 5816
+    },
+    "union_top12": {
+      "pair_recall": 0.6197,
+      "avg": 5.45,
+      "median": 4.0,
+      "p95": 12,
+      "p99": 12,
+      "max": 12,
+      "zero_pct": 0.0779,
+      "oracle_f05": 0.7929,
+      "retrieved": 3604,
+      "true_links": 5816
+    },
+    "union_top20": {
+      "pair_recall": 0.6412,
+      "avg": 6.55,
+      "median": 4.0,
+      "p95": 20,
+      "p99": 20,
+      "max": 20,
+      "zero_pct": 0.0779,
+      "oracle_f05": 0.8042,
+      "retrieved": 3729,
+      "true_links": 5816
+    }
+  },
+  "missed": 2254,
+  "true_links": 5816,
+  "reasons": {
+    "transliteration": 438,
+    "exact_name_blocked_as_too_common": 94,
+    "name_typo": 450,
+    "abbreviation_or_shortened_name": 565,
+    "locality_variation": 79,
+    "trade_or_domain_name": 167,
+    "word_order": 103,
+    "address_typo_or_reorder": 130,
+    "house_number_difference": 30,
+    "missing_address": 30,
+    "different_name_similar_address": 151,
+    "pin_missing": 10,
+    "pin_mismatch": 2,
+    "other": 2,
+    "short_or_common_name": 3
+  },
+  "key_fail_top": [
+    [
+      "shared_kind_al,ap,fx,hn,n,nh,nl",
+      797
+    ],
+    [
+      "shared_kind_ap,fx,hn,n,nh,nl",
+      366
+    ],
+    [
+      "shared_kind_al,ap,fx,n,nl",
+      129
+    ],
+    [
+      "shared_kind_fx,n",
+      110
+    ],
+    [
+      "shared_kind_al,fx,hn,n,nh,nl",
+      108
+    ],
+    [
+      "shared_kind_al,ap,fx,n,nh,nl",
+      105
+    ],
+    [
+      "shared_kind_ap,fx,n,nh,nl",
+      101
+    ],
+    [
+      "shared_kind_fx,hn,n,nh,nl",
+      90
+    ],
+    [
+      "shared_kind_al,ap,fx,hn,nh,nl",
+      71
+    ],
+    [
+      "shared_kind_al,ap,hn,n",
+      60
+    ],
+    [
+      "shared_kind_ap,fx,n,nl",
+      52
+    ],
+    [
+      "shared_kind_fx,n,nh,nl",
+      42
+    ]
+  ],
+  "examples": {
+    "transliteration": [
+      {
+        "n1": "Good Consultancy Limited",
+        "n2": "\u0917\u0941\u0921 \u0915\u0902\u0938\u0932\u094d\u091f\u0947\u0902\u0938\u0940 \u0932\u093f\u092e\u093f\u091f\u0947\u0921",
+        "a1": "54/56, 2Nd Floor, Room No.10, Yasho, Mangal B",
+        "a2": "5-4/56, NULL, MUMBAI, MUMBAI CITY, \u092e\u0939\u093e\u0930\u093e\u0937\u094d\u091f\u094d\u0930",
+        "shared_key_kinds": [
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Good Consultancy Limited",
+        "n2": "\u0917\u0941\u0921 \u0915\u0902\u0938\u0932\u094d\u091f\u0947\u0902\u0938\u0940 \u0932\u093f\u092e\u093f\u091f\u0947\u0921",
+        "a1": "54/56, 2Nd Floor, Room No.10, Yasho, Mangal B",
+        "a2": "5-4/56, Mumbai, \u092e\u0939\u093e\u0930\u093e\u0937\u094d\u091f\u094d\u0930",
+        "shared_key_kinds": [
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "exact_name_blocked_as_too_common": [
+      {
+        "n1": "Good Consultancy Limited",
+        "n2": "Good Consultancy Ltd",
+        "a1": "54/56, 2Nd Floor, Room No.10, Yasho, Mangal B",
+        "a2": "MH, Mumbai, 5-4/56",
+        "shared_key_kinds": [
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Urgent Care Partners",
+        "n2": "Urgent Care Partners [Corporation]",
+        "a1": "10020 4th Avenue, Seattle, WA",
+        "a2": "Seattle, 10020 4rd Ave, Washington",
+        "shared_key_kinds": [
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl",
+          "pin"
+        ]
+      }
+    ],
+    "name_typo": [
+      {
+        "n1": "Good Consultancy Limited",
+        "n2": "Good Cosanultagcy-Limited",
+        "a1": "54/56, 2Nd Floor, Room No.10, Yasho, Mangal B",
+        "a2": "5-4/56, Mumbai, MH",
+        "shared_key_kinds": [
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "YR Infotech Private Limited",
+        "n2": "YR Infbteh Private Limited",
+        "a1": "503/504, 5Th Floor, Orbit Plaza, Zanzarda Roa",
+        "a2": "503/504, 5Th Floor, Orbit Plaza, Zanzarda Roa",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "abbreviation_or_shortened_name": [
+      {
+        "n1": "YR Infotech Private Limited",
+        "n2": "YR Infotech Limited Center",
+        "a1": "503/504, 5Th Floor, Orbit Plaza, Zanzarda Roa",
+        "a2": "503/504, 5TH FLOOR, ORBIT PLAZA, ZANZARDA ROA",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Krishana Charitable Trust",
+        "n2": "Krishana Charitable  Trust #90653",
+        "a1": "Plot No 5, 3Rd Floor, Glass Box, Dharampeth E",
+        "a2": "PLOT NO 5, 3RD FLOOR, GLASS BOX, DHARAMPETH E",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "locality_variation": [
+      {
+        "n1": "Krishana Charitable Trust",
+        "n2": "Dr Krishana Trust Services",
+        "a1": "Plot No 5, 3Rd Floor, Glass Box, Dharampeth E",
+        "a2": "MH, Nagpur, H.no #5, 3Rd Floor, Glass Box, Dh",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Shree Garments Private Limited",
+        "n2": "Shri Shree Private Limited [Partners]",
+        "a1": "Shaikpet, Hyderabad, H.No 1-98/54/1, Telangan",
+        "a2": "Serilingampalli, #G-1-98/54/1, TG",
+        "shared_key_kinds": [
+          "al",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "trade_or_domain_name": [
+      {
+        "n1": "Krishana Charitable Trust",
+        "n2": "krishanacharitabletrust.com",
+        "a1": "Plot No 5, 3Rd Floor, Glass Box, Dharampeth E",
+        "a2": "No #5, 3Rd Floor, Glass Box, Dharampeth Extn,",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Secure Direct Beverage, Inc",
+        "n2": "securedirectbeverage.c0m",
+        "a1": "8966 Impala Avenue, Kellogg, IA",
+        "a2": "8966 1/2 IMPALA AVENUE, KELLLOGG, IA",
+        "shared_key_kinds": [
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "word_order": [
+      {
+        "n1": "Krishana Charitable Trust",
+        "n2": "Krishana Trust Charitable",
+        "a1": "Plot No 5, 3Rd Floor, Glass Box, Dharampeth E",
+        "a2": "Plt No #5, 3Rd Floor, Glass Box, Dharampeth E",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Shree Laboratories LLP",
+        "n2": "Shree LLP Laboratories",
+        "a1": "N-198, First Floor, Mayfield Gardens Sector 5",
+        "a2": "H.no 447 N-198, Gurgaon, Gurugram, HR",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "address_typo_or_reorder": [
+      {
+        "n1": "Aman (India) Grani Pvt Ltd",
+        "n2": "Ltd Aman (India) Pvt (Center)",
+        "a1": "Sonepat Road Near Csd Canteen, Rohtak, Haryan",
+        "a2": "SONEPAT ROAD NEAR CSD CANTEEN, ROHTAK, Haryan",
+        "shared_key_kinds": [
+          "ap",
+          "fx",
+          "n",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Avon Trading Pvt Ltd",
+        "n2": "avontrading.com",
+        "a1": "Mane Chambers, Shivaji Chowk, Latur, Maharash",
+        "a2": "MANE CHAMBERS, SHIVAJI CHOWK, LATUR, Maharash",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "n",
+          "nl"
+        ]
+      }
+    ],
+    "house_number_difference": [
+      {
+        "n1": "Survey & Sons Private Limited",
+        "n2": "Smt Survey Sons Private Limited Partners",
+        "a1": "B-86/A, 4Th Flr, Fl N-501, Shaheen Bgh Abl F ",
+        "a2": "Door No 834 B-86/a, 4Th Flr, Fl N-501, Shahee",
+        "shared_key_kinds": [
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Bureau of Labor",
+        "n2": "Bureau Bureau of Labdor",
+        "a1": "462 Nahatan Street, Unit B6, Norwood, MA",
+        "a2": "461 Nahatan Street, # B6, Norwood, Massachuse",
+        "shared_key_kinds": [
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "missing_address": [
+      {
+        "n1": "Urgent Care Partners",
+        "n2": "URGENT  CARE CENTER Enterprises",
+        "a1": "10020 4th Avenue, Seattle, WA",
+        "a2": "",
+        "shared_key_kinds": [
+          "fx",
+          "n"
+        ]
+      },
+      {
+        "n1": "Bureau of Labor",
+        "n2": "Bureau Bureau of Enterprises",
+        "a1": "462 Nahatan Street, Unit B6, Norwood, MA",
+        "a2": "",
+        "shared_key_kinds": [
+          "fx",
+          "n"
+        ]
+      }
+    ],
+    "different_name_similar_address": [
+      {
+        "n1": "Shree Laboratories LLP",
+        "n2": "Dr Shree Laboratories",
+        "a1": "N-198, First Floor, Mayfield Gardens Sector 5",
+        "a2": "N-198, FIRST FLOOR, MAYFIELD GARDENS SECTOR 5",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Eastern Power Limited",
+        "n2": "DREXVEO",
+        "a1": "Innov8 Ucp, 9Th Floor, Towerd, Unitech Cyber ",
+        "a2": "INNEV#8 UCP, URBAN ESTATE, GURGAON, Haryana",
+        "shared_key_kinds": [
+          "ap",
+          "n"
+        ]
+      }
+    ],
+    "pin_missing": [
+      {
+        "n1": "Evans, Nancie A., L.C.S.W., P.C. Partners",
+        "n2": "Evans, Nancie A., P.C.-Partners Center",
+        "a1": "1530 Mckinley Avenue, Des Moines, IA",
+        "a2": "001530 Mckinley Avenue, Des Moines, Iowa",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "CH Empire Oxley LLC",
+        "n2": "CH Oxley LLC [Center]",
+        "a1": "28376 Village Lake Way, Easton, MD",
+        "a2": "Village Lake Way, Easton, Maryland",
+        "shared_key_kinds": [
+          "fx",
+          "n",
+          "nl"
+        ]
+      }
+    ],
+    "pin_mismatch": [
+      {
+        "n1": "Hardy Group",
+        "n2": "Hialgy Hialgy Group",
+        "a1": "10558 Sunnyside Drive, OR, Wilsonville",
+        "a2": "10558-10562 Sunnyside Dr, Wilsonville, Oregon",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl",
+          "pin"
+        ]
+      },
+      {
+        "n1": "Flint LP",
+        "n2": "[LP] Flihhnt",
+        "a1": "12810 210th Circle, Elk River, MN",
+        "a2": "012810 210st Circle, Elk River, Minnesota",
+        "shared_key_kinds": [
+          "ap",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl",
+          "pin"
+        ]
+      }
+    ],
+    "other": [
+      {
+        "n1": "Tirupati Developers Private Limited",
+        "n2": "Tirupati Tirupati Devel0pers Limited Center",
+        "a1": "Gujarat, P.No.134, B.No.166, Vishwakarma Soc,",
+        "a2": "P.no.134, Surat, GJ",
+        "shared_key_kinds": [
+          "fx",
+          "n",
+          "nh",
+          "nl"
+        ]
+      },
+      {
+        "n1": "Space Infra Ltd",
+        "n2": "Space Ltd Service",
+        "a1": "No. 54, Sai Niwas, Omshakthi Nagar Extension,",
+        "a2": "No. 54, Rathinapuri, TN",
+        "shared_key_kinds": [
+          "al",
+          "fx",
+          "hn",
+          "n",
+          "nh",
+          "nl"
+        ]
+      }
+    ],
+    "short_or_common_name": [
+      {
+        "n1": "Zephyr",
+        "n2": "Zmgfphyr",
+        "a1": "Abington Township, PA, 1012 Easton Road",
+        "a2": "1012 EASTON ROAD, ABINGTON TOWNSHIP, PA",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "hn",
+          "n"
+        ]
+      },
+      {
+        "n1": "Zephyr",
+        "n2": "Zeiyr",
+        "a1": "Abington Township, PA, 1012 Easton Road",
+        "a2": "1012 EASTON RD, ABINGTON, PA",
+        "shared_key_kinds": [
+          "al",
+          "ap",
+          "hn",
+          "n"
+        ]
+      }
+    ]
+  },
+  "max_df": 40
+}
