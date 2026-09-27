@@ -11,6 +11,7 @@ import argparse
 import csv
 import json
 import re
+import shutil
 import sqlite3
 import statistics
 import sys
@@ -214,6 +215,303 @@ def build_block_db(paths: list[Path], db_path: Path, max_per_key: int) -> None:
     conn.close()
     del sketch
     print(f"Block DB ready {db_path} rows={written:,} in {time.time()-t0:.0f}s", flush=True)
+
+
+def legacy_block_keys(name: str, address: str, country: str) -> list[str]:
+    """Keys stored in train_blocks_v2. Extra kinds are exact-capped separately."""
+    return [k for k in block_keys(name, address, country) if _kind(k) not in EXTRA_KIND]
+
+
+def _refuse_protected(path: Path) -> None:
+    resolved = path.resolve()
+    if resolved.name in {"test_blocks_union.sqlite", "rank_model_hgb_v2.joblib", "rule_v2.json"}:
+        raise SystemExit(f"refusing to modify {resolved}")
+    if resolved.name == "output_v4" or "output_v4" in resolved.parts:
+        raise SystemExit(f"refusing to modify {resolved}")
+
+
+def _free_gb(path: Path) -> float:
+    parent = path.parent if path.parent.exists() else Path(".")
+    return shutil.disk_usage(parent).free / (1024 ** 3)
+
+
+def _disk_guard(path: Path, label: str, minimum_gb: float = 2.5) -> float:
+    free = _free_gb(path)
+    if free < minimum_gb:
+        raise SystemExit(f"Stopping {label}: only {free:.1f} GB free")
+    return free
+
+
+def build_legacy_block_db_from_sqlite(src_db: Path, db_path: Path, max_per_key: int) -> None:
+    """Legacy-key sketch, same caps as train_blocks_v2. Extra keys are not counted."""
+    _refuse_protected(db_path)
+    if db_path.exists():
+        db_path.unlink()
+    src = sqlite3.connect(str(src_db))
+    total = src.execute("SELECT COUNT(*) FROM entities").fetchone()[0]
+    print(f"Legacy pass 1/2 count keys from sqlite ({total:,})…", flush=True)
+    sketch = _new_sketch()
+    t0 = time.time()
+    n = 0
+    cur = src.execute("SELECT name, addr, country FROM entities")
+    while True:
+        rows = cur.fetchmany(150_000)
+        if not rows:
+            break
+        for name, addr, country in rows:
+            for key in legacy_block_keys(name or "", addr or "", country or ""):
+                _bump(sketch, key)
+        n += len(rows)
+        if n % 1_000_000 == 0:
+            print(
+                f"  counted {n:,}  [{time.time()-t0:.0f}s] free={_disk_guard(db_path, 'legacy index'):.1f}GB",
+                flush=True,
+            )
+    print(f"Counted {n:,} in {time.time()-t0:.0f}s", flush=True)
+
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("PRAGMA journal_mode=OFF")
+    conn.execute("PRAGMA synchronous=OFF")
+    conn.execute("CREATE TABLE kv (k TEXT, eid TEXT)")
+    print("Legacy pass 2/2 write rare keys…", flush=True)
+    t1 = time.time()
+    written = 0
+    batch = []
+    cur = src.execute("SELECT entity_id, name, addr, country FROM entities")
+    while True:
+        rows = cur.fetchmany(100_000)
+        if not rows:
+            break
+        for eid, name, addr, country in rows:
+            for key in legacy_block_keys(name or "", addr or "", country or ""):
+                if _keep(sketch, key, max_per_key):
+                    batch.append((key, eid))
+            if len(batch) >= 50_000:
+                conn.executemany("INSERT INTO kv VALUES (?,?)", batch)
+                written += len(batch)
+                batch.clear()
+                if written % 2_000_000 < 50_000:
+                    print(f"  inserted {written:,}  [{time.time()-t1:.0f}s]", flush=True)
+    if batch:
+        conn.executemany("INSERT INTO kv VALUES (?,?)", batch)
+        written += len(batch)
+    conn.commit()
+    del sketch
+    print(f"Indexing {written:,} legacy postings…", flush=True)
+    conn.execute("CREATE INDEX ix_k ON kv(k)")
+    conn.commit()
+    conn.close()
+    src.close()
+    print(f"Legacy block DB ready rows={written:,} in {time.time()-t0:.0f}s", flush=True)
+
+
+def _accumulate_exact_extra(paths: list[Path], watch: set[str] | None, max_df: int):
+    """Exact cap used by merge_extra_postings.
+
+    A key is removed entirely once it matches more than max_df entities.
+    watch=None keeps every extra key; otherwise only those keys are stored.
+    Returns (postings, dead_count, rows_scanned).
+    """
+    post: dict[str, list[str]] = defaultdict(list)
+    counts: dict[str, int] = {}
+    dead: set[str] = set()
+    n = 0
+    for path in paths:
+        with open(path, newline="") as f:
+            for row in csv.DictReader(f, delimiter="\t"):
+                eid = row["entity_id"]
+                emitted = set()
+                for _blocker_name, key in extra_key_pairs(
+                    row.get("business_name") or "",
+                    row.get("business_address") or "",
+                    row.get("country") or "",
+                ):
+                    if key in emitted or key in dead:
+                        continue
+                    if watch is not None and key not in watch:
+                        continue
+                    emitted.add(key)
+                    counts[key] = counts.get(key, 0) + 1
+                    post[key].append(eid)
+                    if counts[key] > max_df:
+                        dead.add(key)
+                        post.pop(key, None)
+                        counts.pop(key, None)
+                n += 1
+                if n % 2_000_000 == 0:
+                    print(f"  exact extra scanned {n:,} live={len(post):,} dead={len(dead):,}", flush=True)
+    print(f"  exact extra scanned {n:,} live={len(post):,} dead={len(dead):,}", flush=True)
+    return post, len(dead), n
+
+
+def build_extra_exact_db(paths: list[Path], db_path: Path, max_df: int = EXTRA_CAP) -> None:
+    """One exact cap-40 pass over S2/S3. Counts live in a separate file and are deleted."""
+    _refuse_protected(db_path)
+    cnt_path = db_path.with_name(db_path.stem + "_cnt.sqlite")
+    _refuse_protected(cnt_path)
+    for path in (db_path, cnt_path):
+        if path.exists():
+            path.unlink()
+    print(f"Exact extra keys cap={max_df} from {len(paths)} files…", flush=True)
+    done = False
+    try:
+        cnt = sqlite3.connect(str(cnt_path))
+        cnt.execute("PRAGMA journal_mode=OFF")
+        cnt.execute("PRAGMA synchronous=OFF")
+        cnt.execute("PRAGMA temp_store=FILE")
+        cnt.execute("CREATE TABLE cnt (k TEXT PRIMARY KEY, n INTEGER NOT NULL)")
+        t0 = time.time()
+        scanned = 0
+        pending: dict[str, int] = {}
+
+        def flush_counts() -> None:
+            if not pending:
+                return
+            cnt.executemany(
+                "INSERT INTO cnt(k, n) VALUES(?, ?) "
+                "ON CONFLICT(k) DO UPDATE SET n = n + excluded.n",
+                list(pending.items()),
+            )
+            pending.clear()
+
+        for path in paths:
+            with open(path, newline="") as f:
+                for row in csv.DictReader(f, delimiter="\t"):
+                    emitted = set()
+                    for _blocker_name, key in extra_key_pairs(
+                        row.get("business_name") or "",
+                        row.get("business_address") or "",
+                        row.get("country") or "",
+                    ):
+                        if key in emitted:
+                            continue
+                        emitted.add(key)
+                        pending[key] = pending.get(key, 0) + 1
+                    scanned += 1
+                    if len(pending) >= 100_000:
+                        flush_counts()
+                    if scanned % 1_000_000 == 0:
+                        flush_counts()
+                        cnt.commit()
+                        free = _disk_guard(db_path, "extra index")
+                        print(f"  counted {scanned:,}  [{time.time()-t0:.0f}s] free={free:.1f}GB", flush=True)
+        flush_counts()
+        cnt.commit()
+        kept = cnt.execute("SELECT COUNT(*) FROM cnt WHERE n <= ?", (max_df,)).fetchone()[0]
+        dead = cnt.execute("SELECT COUNT(*) FROM cnt WHERE n > ?", (max_df,)).fetchone()[0]
+        print(f"Exact counts scanned={scanned:,} keep_keys={kept:,} dead_keys={dead:,}", flush=True)
+
+        conn = sqlite3.connect(str(db_path))
+        conn.execute("PRAGMA journal_mode=OFF")
+        conn.execute("PRAGMA synchronous=OFF")
+        conn.execute("PRAGMA temp_store=FILE")
+        conn.execute("CREATE TABLE kv (k TEXT, eid TEXT)")
+        written = 0
+        batch = []
+        buf_rows: list[tuple[str, list[str]]] = []
+        keyset: list[str] = []
+        seen: set[str] = set()
+
+        def flush_rows() -> None:
+            nonlocal written
+            if not buf_rows:
+                return
+            ok: set[str] = set()
+            for i in range(0, len(keyset), 400):
+                part = keyset[i : i + 400]
+                q = ",".join("?" * len(part))
+                ok.update(
+                    k
+                    for (k,) in cnt.execute(
+                        f"SELECT k FROM cnt WHERE k IN ({q}) AND n <= ?",
+                        (*part, max_df),
+                    )
+                )
+            for eid, keys in buf_rows:
+                for key in keys:
+                    if key in ok:
+                        batch.append((key, eid))
+            if len(batch) >= 50_000:
+                conn.executemany("INSERT INTO kv VALUES (?,?)", batch)
+                written += len(batch)
+                batch.clear()
+                if written % 2_000_000 < 50_000:
+                    free = _disk_guard(db_path, "extra index")
+                    print(f"  inserted {written:,}  [{time.time()-t0:.0f}s] free={free:.1f}GB", flush=True)
+            buf_rows.clear()
+            keyset.clear()
+            seen.clear()
+
+        for path in paths:
+            with open(path, newline="") as f:
+                for row in csv.DictReader(f, delimiter="\t"):
+                    eid = row["entity_id"]
+                    emitted = set()
+                    keys = []
+                    for _blocker_name, key in extra_key_pairs(
+                        row.get("business_name") or "",
+                        row.get("business_address") or "",
+                        row.get("country") or "",
+                    ):
+                        if key not in emitted:
+                            emitted.add(key)
+                            keys.append(key)
+                    if keys:
+                        buf_rows.append((eid, keys))
+                        for key in keys:
+                            if key not in seen:
+                                seen.add(key)
+                                keyset.append(key)
+                    if len(keyset) >= 2_000:
+                        flush_rows()
+        flush_rows()
+        if batch:
+            conn.executemany("INSERT INTO kv VALUES (?,?)", batch)
+            written += len(batch)
+            batch.clear()
+        conn.commit()
+        cnt.close()
+        if cnt_path.exists():
+            cnt_path.unlink()
+        print(f"Indexing {written:,} exact extra postings… free={_disk_guard(db_path, 'extra index'):.1f}GB", flush=True)
+        conn.execute("CREATE INDEX ix_k ON kv(k)")
+        conn.commit()
+        conn.close()
+        done = True
+        print(f"Extra DB ready rows={written:,} dead_keys={dead:,} in {time.time()-t0:.0f}s", flush=True)
+    finally:
+        if not done:
+            for path in (db_path, cnt_path):
+                if path.exists():
+                    path.unlink()
+
+
+def attach_extra_from_db(
+    records: list[tuple],
+    conn: sqlite3.Connection,
+    pools: dict[str, dict[str, set[str]]],
+) -> None:
+    """Union exact extra postings into pools. Same blocker names as merge_extra_postings."""
+    query_keys = []
+    watch = set()
+    for _eid, name, addr, country in records:
+        pairs = extra_key_pairs(name, addr, country)
+        query_keys.append(pairs)
+        watch.update(key for _, key in pairs)
+    post: dict[str, list[str]] = defaultdict(list)
+    keys = list(watch)
+    for i in range(0, len(keys), 400):
+        part = keys[i : i + 400]
+        if not part:
+            continue
+        q = ",".join("?" * len(part))
+        for k, cid in conn.execute(f"SELECT k, eid FROM kv WHERE k IN ({q})", part):
+            post[k].append(cid)
+    for (eid, *_rest), pairs in zip(records, query_keys):
+        sources = pools[eid]
+        for blocker, key in pairs:
+            for cid in post.get(key, ()):
+                sources[cid].add(blocker)
 
 
 def build_block_db_from_sqlite(src_db: Path, db_path: Path, max_per_key: int) -> None:
@@ -929,8 +1227,24 @@ def run_infer(args, summary: dict) -> None:
         print("Infer uses the classifier.", flush=True)
     else:
         print(f"Infer uses rule {summary['rule']} addr={summary['addr']}", flush=True)
-    db_path = Path(args.test_block_db)
-    if not db_path.exists() or args.rebuild:
+    out = Path(args.output_dir)
+    _refuse_protected(out)
+    use_holdout_pools = bool(args.legacy_block_db and args.extra_block_db)
+    db_path = Path(args.legacy_block_db if use_holdout_pools else args.test_block_db)
+    _refuse_protected(db_path)
+    if use_holdout_pools:
+        extra_path = Path(args.extra_block_db)
+        _refuse_protected(extra_path)
+        if not db_path.exists() or not extra_path.exists():
+            raise SystemExit(
+                "Holdout-style inference needs the legacy index and the exact extra index. "
+                "Refusing to build or reuse test_blocks_union.sqlite."
+            )
+        print(
+            f"Infer candidates: legacy={db_path} extra={extra_path} cap={EXTRA_CAP} k={args.max_cands}",
+            flush=True,
+        )
+    elif not db_path.exists() or args.rebuild:
         build_block_db_from_sqlite(Path(args.test_sqlite), db_path, args.max_per_key)
     rule = tuple(summary["rule"])
     addr_idx = 0 if summary["addr"] == "addr_sort" else 1
@@ -950,6 +1264,7 @@ def run_infer(args, summary: dict) -> None:
         clf, thr = blob["model"], blob["threshold"]
 
     block = sqlite3.connect(str(db_path))
+    extra_conn = sqlite3.connect(str(args.extra_block_db)) if use_holdout_pools else None
     text = sqlite3.connect(str(args.test_sqlite))
     out = Path(args.output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -977,6 +1292,8 @@ def run_infer(args, summary: dict) -> None:
             for r in chunk.itertuples(index=False)
         ]
         pools = pools_from_index(block, records)
+        if extra_conn is not None:
+            attach_extra_from_db(records, extra_conn, pools)
         need = [cid for sources in pools.values() for cid in sources]
         rec = {}
         for i in range(0, len(need), 800):
@@ -1048,13 +1365,18 @@ def run_infer(args, summary: dict) -> None:
         ).to_csv(cand_path, sep="\t", index=False, mode="a", header=not wrote)
         wrote = True
         n += len(records)
-        if n % 40000 < args.chunk_s1:
-            rate = n / max(time.time() - t0, 1)
+        if n % 20000 < args.chunk_s1:
+            elapsed = time.time() - t0
+            rate = n / max(elapsed, 1)
+            remaining = (1_732_544 - n) / max(rate, 1)
             print(
-                f"  infer {n:,}  {rate:.0f}/s  nonempty={nonempty:,}  ETA {(1732544-n)/max(rate,1)/60:.0f}m",
+                f"  infer rows={n:,} written={n:,} {rate:.1f}/s "
+                f"elapsed={elapsed/60:.1f}m remaining={remaining/60:.0f}m nonempty={nonempty:,}",
                 flush=True,
             )
     block.close()
+    if extra_conn is not None:
+        extra_conn.close()
     text.close()
     print(f"DONE infer rows={n:,} nonempty={nonempty:,} -> {match_path}", flush=True)
 
@@ -1209,6 +1531,8 @@ def main() -> None:
     ap.add_argument("--test-dir", default="dataset/test")
     ap.add_argument("--block-db", default="artifacts/train_blocks.sqlite")
     ap.add_argument("--test-block-db", default="artifacts/test_blocks.sqlite")
+    ap.add_argument("--legacy-block-db", default="", help="Legacy-key index. Does not replace test_blocks_union.sqlite.")
+    ap.add_argument("--extra-block-db", default="", help="Exact cap-40 extra-key index.")
     ap.add_argument("--test-sqlite", default="artifacts/test_s23.sqlite")
     ap.add_argument("--rule-path", default="artifacts/rule.json")
     ap.add_argument("--output-dir", default="output_v3")
