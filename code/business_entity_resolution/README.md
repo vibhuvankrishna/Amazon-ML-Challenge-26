@@ -21,12 +21,27 @@ source .venv/bin/activate
 pip install -r code/business_entity_resolution/requirements.txt
 ```
 
-## Pipeline
+## Raise-score path (HGB v3 + sibling accept)
 
-1. **Normalize** names/addresses (rules only — no geocoding APIs)
-2. **Block** with inverted keys (country + name tokens + PIN digits + phonetic-ish key)
-3. **Score** candidate pairs with sklearn `HistGradientBoosting` on rapidfuzz string features
-4. Write `output/matching_results.tsv` + `output/candidate_pairs.tsv`
+Production decision model: `artifacts/rank_model_hgb_v3.joblib` (rich 30-feature HGB, rule cutoffs from holdout ~0.83).
+
+```bash
+# Unit checks (no full dataset)
+python artifacts/analysis/test_raise_score.py
+
+# Refit with hard-negative weights when K=12 cache / train indexes exist
+python artifacts/analysis/raise_score.py --min-f05 0.83
+
+# Full test infer → output_v6/  (needs dataset/test + artifacts/test_s23.sqlite)
+python artifacts/analysis/run_output_v6.py
+
+python utils/validate_submission.py \
+  --matching output_v6/matching_results.tsv \
+  --candidate output_v6/candidate_pairs.tsv \
+  --test-dir dataset/test
+```
+
+Changes vs the 0.42 string scorer: sibling acceptance for multi-source matches, typo/short-name blocking keys (`rare_pin`, `phonetic_house`, `sorted_house`), French address expansions, hard-negative upweighting in refits.
 
 ## Commands
 

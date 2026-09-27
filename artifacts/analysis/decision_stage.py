@@ -467,22 +467,37 @@ def apply_rule(rows, probas, rule) -> list[set[str]]:
             continue
         order = sorted(range(len(ps)), key=lambda i: -ps[i])
         best = ps[order[0]]
+        strong_anchor = False
         for rank, i in enumerate(order):
             c = row["cands"][i]
             p = ps[i]
+            x = c["x"]
+            name_s = float(x[0])
+            house = float(x[18]) >= 1.0
+            pin = float(x[19]) >= 1.0
+            loc = float(x[20]) >= 1.0
             t = rule["t"]
-            if float(c["x"][23]) >= 1.0:
+            if float(x[23]) >= 1.0:
                 t = max(t, rule["t_empty"])
-            if float(c["x"][11]) >= 1.0:
+            if float(x[11]) >= 1.0:
                 t = max(t, rule["t_short"])
-            if float(c["x"][29]) >= 1.0:
+            if float(x[29]) >= 1.0:
                 t = max(t, rule["t_conflict"])
-            if rank > 0:
+            sibling = (
+                rank > 0
+                and strong_anchor
+                and name_s >= 0.55
+                and house
+                and (loc or pin)
+            )
+            if rank > 0 and not sibling:
                 t = max(t, rule["t_extra"])
                 if best - p > rule["margin"]:
                     continue
-            if p >= t:
+            if p >= t or sibling:
                 pred.add(c["cid"])
+                if name_s >= 0.78 and (house or pin or loc):
+                    strong_anchor = True
         preds.append(pred)
     return preds
 
@@ -524,17 +539,41 @@ def best_rule(rows, probas) -> tuple[dict, float]:
     return best, best_f
 
 
-def fit_hgb(X, y):
+def fit_hgb(X, y, sample_weight=None):
     from sklearn.ensemble import HistGradientBoostingClassifier
 
     pos = max(int(y.sum()), 1)
     neg = max(int(len(y) - pos), 1)
     w = np.where(y == 1, neg / pos, 1.0).astype(np.float32)
+    if sample_weight is not None:
+        w = w * np.asarray(sample_weight, dtype=np.float32)
     clf = HistGradientBoostingClassifier(
-        max_iter=200, learning_rate=0.08, max_depth=6, min_samples_leaf=30, random_state=42
+        max_iter=250, learning_rate=0.08, max_depth=6, min_samples_leaf=30, random_state=42
     )
     clf.fit(X, y, sample_weight=w)
     return clf
+
+
+def hard_negative_weights(rows) -> np.ndarray:
+    """Upweight same-house weak-name and multi-blocker false pairs."""
+    weights = []
+    for row in rows:
+        true = row["true"]
+        for c in row["cands"]:
+            if c["cid"] in true:
+                weights.append(1.0)
+                continue
+            x = c["x"]
+            name_s = float(x[0])
+            house = float(x[18]) >= 1.0
+            nblk = float(x[24])
+            w = 1.0
+            if house and name_s < 0.7:
+                w *= 3.0
+            if nblk >= 2:
+                w *= 2.0
+            weights.append(w)
+    return np.asarray(weights, dtype=np.float32)
 
 
 def fit_logreg(X, y):

@@ -1,0 +1,30 @@
+{
+  "model": "artifacts/rank_model_hgb_v3.joblib",
+  "source": "Recovered from rank_model_hgb_v2.joblib (numpy BitGenerator pickle fix)",
+  "rule": {
+    "t": 0.72,
+    "t_empty": 0.82,
+    "t_extra": 0.72,
+    "t_short": 0.82,
+    "t_conflict": 0.72,
+    "margin": 0.12
+  },
+  "prior_holdout_macro_f05": 0.833,
+  "prior_holdout_source": "artifacts/analysis/decision_report.json hgb_rich_refit_train70",
+  "sibling_accept": true,
+  "typo_keys": ["rp", "ph", "sh"],
+  "france_abbrev": true,
+  "hard_negative_training": "artifacts/analysis/raise_score.py + decision_stage.hard_negative_weights",
+  "hard_negative_smoke": {
+    "model": "artifacts/rank_model_hgb_smoke.joblib",
+    "macro_f05": 0.9,
+    "note": "Synthetic smoke only; production model remains hgb_v3 until real K=12 cache refit"
+  },
+  "infer_command": "python artifacts/analysis/run_output_v6.py",
+  "dataset_required": [
+    "dataset/train/*",
+    "dataset/test/*",
+    "artifacts/test_s23.sqlite",
+    "artifacts/analysis/k12_candidates.pkl (or train_blocks_v2.sqlite to rebuild)"
+  ]
+}

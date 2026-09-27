@@ -6,6 +6,12 @@ output_v2/
 output_v3/
 output_v4/
 output_v5/
+output_v6/
+
+# Local data archives / full student package (keep off GitHub).
+student_resource.zip
+*_submission.zip
+Lemon Tea_submission.zip
 
 # Pair files, including any future output directory.
 matching_results.tsv
@@ -27,11 +33,12 @@ __pycache__/
 
 logs/
 
-# Secrets.
+# Secrets / ephemeral download tokens.
 .env
 *.pem
 credentials.json
 secrets.json
+onedrive_manifest.json
 
 # Local screenshots.
 Screenshot*.png

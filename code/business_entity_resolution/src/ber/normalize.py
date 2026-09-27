@@ -37,6 +37,18 @@ _ADDR_EXPAND = {
     r"\bp\.?\s*o\.?\s*box\b": "po box",
     r"\bnr\.?\b": "near",
     r"\bopp\.?\b": "opposite",
+    # France (test-only country) — local expansions only, no geocoding.
+    r"\brue\b": "street",
+    r"\bav\.?\b": "avenue",
+    r"\bbd\.?\b": "boulevard",
+    r"\bboul\.?\b": "boulevard",
+    r"\bste\.?\b": "sainte",
+    r"\bcedex\b": "cedex",
+    r"\bpl\.?\b": "place",
+    r"\ballee\b": "allee",
+    r"\ballée\b": "allee",
+    r"\bimpasse\b": "impasse",
+    r"\bchemin\b": "chemin",
 }
 
 # Very common tokens that make terrible solo blocking keys

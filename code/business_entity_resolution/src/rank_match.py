@@ -63,6 +63,10 @@ EXTRA_KIND = {
     "apx": "address",
     "alx": "address",
     "hnx": "address",
+    # Typo / shortened-name keys (plan step 3). Hot keys still die at EXTRA_CAP.
+    "rp": "rare_pin",
+    "ph": "phonetic_house",
+    "sh": "sorted_house",
 }
 _DIGIT_RUNS = re.compile(r"\d+")
 _DEV_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
@@ -599,16 +603,33 @@ def _name_toks_ge3(name: str) -> list[str]:
     return [t for t in (significant_name_tokens(name) or name_tokens(name)) if len(t) >= 3]
 
 
+def _consonant_skeleton(token: str) -> str:
+    """Cheap sound-alike form for typo/transliteration blocking."""
+    t = (token or "").lower()
+    if len(t) < 5:
+        return ""
+    # Drop vowels after the first letter; keep first char so "sharma"/"sarma" meet.
+    out = [t[0]]
+    for ch in t[1:]:
+        if ch not in "aeiou":
+            out.append(ch)
+    sk = "".join(out)
+    return sk if len(sk) >= 3 else ""
+
+
 def extra_key_pairs(name: str, address: str, country: str) -> list[tuple[str, str]]:
     """Blockers that the holdout union showed were worth keeping.
 
-    Transliteration and character trigrams are not included.
+    Adds rare-token+PIN, phonetic+house, and sorted-tokens+house for typos
+    and shortened names. Transliteration whole-string keys and character
+    trigrams are still omitted (measured as useless).
     House numbers here are the first left-to-right digit run, so the key
     does not depend on set iteration order.
     """
     c = _country(country)
     out: list[tuple[str, str]] = []
     house = _house_ltr(address)
+    pin = _pin_ltr(address)
     toks = _name_toks_ge3(name)
     if house:
         seen = set()
@@ -619,6 +640,12 @@ def extra_key_pairs(name: str, address: str, country: str) -> list[tuple[str, st
             if key not in seen:
                 seen.add(key)
                 out.append(("short_name_house", key))
+            sk = _consonant_skeleton(t)
+            if sk:
+                ph_key = f"{c}|ph|{sk}_{house}"
+                if ph_key not in seen:
+                    seen.add(ph_key)
+                    out.append(("phonetic_house", ph_key))
     nn = normalize_name(name)
     if len(nn) >= 8 and house:
         out.append(("name_house", f"{c}|nhx|{nn}_{house}"))
@@ -627,6 +654,18 @@ def extra_key_pairs(name: str, address: str, country: str) -> list[tuple[str, st
         out.append(("house_locality", f"{c}|hl|{house}_{loc}"))
     if len(toks) >= 2:
         out.append(("sorted_name", f"{c}|s|{'|'.join(sorted(toks))}"))
+        if house:
+            out.append(("sorted_house", f"{c}|sh|{'|'.join(sorted(toks))}_{house}"))
+    # Rare long token + PIN: survives a typo in the *other* leading name word.
+    if pin:
+        seen_rp = set()
+        for t in toks:
+            if len(t) < 6:
+                continue
+            key = f"{c}|rp|{t}_{pin}"
+            if key not in seen_rp:
+                seen_rp.add(key)
+                out.append(("rare_pin", key))
     at = [
         t
         for t in address_tokens(address or "")
@@ -900,16 +939,28 @@ def decision_features(
 
 
 def decide_matches(vectors, ids: list[str], probas, rule: dict) -> list[str]:
-    """Accept every candidate that clears the rule. Empty means no match."""
+    """Accept confident candidates; also keep siblings of a strong match.
+
+    A later candidate can be kept when a strong name match was already
+    accepted and this candidate shares house plus locality or PIN, without
+    being in the weak-name band. Plain "same house, weak name" is still
+    rejected — that pattern is a common false merge.
+    """
     if len(ids) == 0:
         return []
     order = sorted(range(len(ids)), key=lambda i: -float(probas[i]))
     best = float(probas[order[0]])
     kept = []
     seen = set()
+    # Feature layout from decision_features: name_s=0, house=18, pin=19, loc=20.
+    strong_anchor = False
     for rank, i in enumerate(order):
         p = float(probas[i])
         row = vectors[i]
+        name_s = float(row[0])
+        house = float(row[18]) >= 1.0
+        pin = float(row[19]) >= 1.0
+        loc = float(row[20]) >= 1.0
         t = rule["t"]
         if float(row[23]) >= 1.0:
             t = max(t, rule["t_empty"])
@@ -917,13 +968,23 @@ def decide_matches(vectors, ids: list[str], probas, rule: dict) -> list[str]:
             t = max(t, rule["t_short"])
         if float(row[29]) >= 1.0:
             t = max(t, rule["t_conflict"])
-        if rank > 0:
+        # Sibling: same site as an already-accepted strong name match.
+        sibling = (
+            rank > 0
+            and strong_anchor
+            and name_s >= 0.55
+            and house
+            and (loc or pin)
+        )
+        if rank > 0 and not sibling:
             t = max(t, rule["t_extra"])
             if best - p > rule["margin"]:
                 continue
-        if p >= t and ids[i] not in seen:
+        if (p >= t or sibling) and ids[i] not in seen:
             seen.add(ids[i])
             kept.append(ids[i])
+            if name_s >= 0.78 and (house or pin or loc):
+                strong_anchor = True
     return kept
 
 
